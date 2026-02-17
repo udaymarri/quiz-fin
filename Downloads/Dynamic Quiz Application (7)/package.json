@@ -2,6 +2,7 @@
   "name": "quizmaster-pro",
   "private": true,
   "version": "1.0.0",
+  "description": "Premium QuizMaster Pro application with dynamic categories and analytics",
   "type": "module",
   "scripts": {
     "dev": "vite",
