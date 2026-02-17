@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "Premium QuizMaster Pro application with dynamic categories and analytics",
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
