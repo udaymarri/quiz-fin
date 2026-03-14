@@ -1,5 +1,5 @@
 const IS_PROD = import.meta.env.PROD || window.location.hostname !== 'localhost';
-const BACKEND_URL = 'https://quiz-fin-backend.onrender.com';
+const BACKEND_URL = 'https://quiz-fin-production.up.railway.app';
 
 // @ts-ignore
 const API_BASE_URL = import.meta.env.VITE_API_URL || (IS_PROD ? BACKEND_URL : 'http://localhost:8000');
