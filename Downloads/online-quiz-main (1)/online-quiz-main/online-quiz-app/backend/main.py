@@ -9,8 +9,15 @@ from typing import List, Optional
 from datetime import datetime
 import google.generativeai as genai
 
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Configure Gemini AI
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyAQ4fMQE8ufty9Q08Gvd1aWLdxaVLr4STY")
+logger.info(f"Initializing Gemini AI with key: {GEMINI_API_KEY[:5]}...")
 genai.configure(api_key=GEMINI_API_KEY)
 generation_config = {
   "temperature": 0.7,
@@ -37,12 +44,22 @@ app.add_middleware(
 # Initialize Firebase Admin
 try:
     if not firebase_admin._apps:
-        firebase_admin.initialize_app()
+        # Check if we have credentials file path
+        cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        if cred_path and os.path.exists(cred_path):
+            logger.info(f"Initializing Firebase with credentials from {cred_path}")
+            cred = credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(cred)
+        else:
+            logger.info("Initializing Firebase with default credentials")
+            firebase_admin.initialize_app()
     db = firestore.client()
+    logger.info("Firebase Firestore initialized successfully")
 except Exception as e:
-    print(f"Firebase Admin Check: {e}")
+    logger.error(f"Firebase Admin Initialization Failed: {e}")
     # Fallback/Mock initialization if needed for dev
     db = None
+    logger.info("Falling back to mock data store")
 
 # --- MOCK DATA STORES FOR LOCAL DEV WITHOUT FIREBASE ---
 mock_questions_store = [
@@ -87,7 +104,20 @@ class ChatbotRequest(BaseModel):
 
 @app.get("/")
 async def root():
-    return {"message": "QuizMaster Pro API is running"}
+    return {
+        "message": "QuizMaster Pro API is running",
+        "firebase_active": db is not None,
+        "ai_active": GEMINI_API_KEY is not None and not GEMINI_API_KEY.startswith("AIzaSyAQ4fMQE")
+    }
+
+@app.get("/status")
+async def status():
+    return {
+        "status": "healthy",
+        "db": "connected" if db else "offline (mock mode)",
+        "gemini_key_set": GEMINI_API_KEY != "AIzaSyAQ4fMQE8ufty9Q08Gvd1aWLdxaVLr4STY",
+        "timestamp": datetime.now().isoformat()
+    }
 
 @app.get("/questions")
 async def get_questions(category: Optional[str] = None, difficulty: Optional[str] = None):
