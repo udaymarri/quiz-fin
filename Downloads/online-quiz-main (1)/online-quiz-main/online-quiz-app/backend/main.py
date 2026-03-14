@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 # Configure Gemini AI
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyAQ4fMQE8ufty9Q08Gvd1aWLdxaVLr4STY")
+IS_GENERIC_KEY = GEMINI_API_KEY == "AIzaSyAQ4fMQE8ufty9Q08Gvd1aWLdxaWLr4STY"
+
 logger.info(f"Initializing Gemini AI with key: {GEMINI_API_KEY[:5]}...")
 genai.configure(api_key=GEMINI_API_KEY)
 generation_config = {
@@ -44,20 +46,27 @@ app.add_middleware(
 # Initialize Firebase Admin
 try:
     if not firebase_admin._apps:
-        # Check if we have credentials file path
-        cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-        if cred_path and os.path.exists(cred_path):
-            logger.info(f"Initializing Firebase with credentials from {cred_path}")
-            cred = credentials.Certificate(cred_path)
+        # 1. Try FIREBASE_SERVICE_ACCOUNT_JSON string (ideal for Railway/Render)
+        service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+        if service_account_json:
+            logger.info("Initializing Firebase with FIREBASE_SERVICE_ACCOUNT_JSON env var")
+            cred_dict = json.loads(service_account_json)
+            cred = credentials.Certificate(cred_dict)
             firebase_admin.initialize_app(cred)
+        # 2. Try physical file path
         else:
-            logger.info("Initializing Firebase with default credentials")
-            firebase_admin.initialize_app()
+            cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+            if cred_path and os.path.exists(cred_path):
+                logger.info(f"Initializing Firebase with credentials from {cred_path}")
+                cred = credentials.Certificate(cred_path)
+                firebase_admin.initialize_app(cred)
+            else:
+                logger.info("Initializing Firebase with default credentials")
+                firebase_admin.initialize_app()
     db = firestore.client()
     logger.info("Firebase Firestore initialized successfully")
 except Exception as e:
     logger.error(f"Firebase Admin Initialization Failed: {e}")
-    # Fallback/Mock initialization if needed for dev
     db = None
     logger.info("Falling back to mock data store")
 
@@ -107,7 +116,7 @@ async def root():
     return {
         "message": "QuizMaster Pro API is running",
         "firebase_active": db is not None,
-        "ai_active": GEMINI_API_KEY is not None and not GEMINI_API_KEY.startswith("AIzaSyAQ4fMQE")
+        "ai_active": GEMINI_API_KEY is not None and not IS_GENERIC_KEY
     }
 
 @app.get("/status")
@@ -115,7 +124,8 @@ async def status():
     return {
         "status": "healthy",
         "db": "connected" if db else "offline (mock mode)",
-        "gemini_key_set": GEMINI_API_KEY != "AIzaSyAQ4fMQE8ufty9Q08Gvd1aWLdxaVLr4STY",
+        "gemini_active": not IS_GENERIC_KEY,
+        "firebase_active": db is not None,
         "timestamp": datetime.now().isoformat()
     }
 
