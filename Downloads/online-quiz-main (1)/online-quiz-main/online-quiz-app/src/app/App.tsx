@@ -25,7 +25,7 @@ import {
   User as UserIcon
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
-import { auth, getQuestions } from '@/services/firebase';
+import { auth } from '@/services/firebase';
 import { Leaderboard } from '@/app/pages/Leaderboard';
 import { AdminPanel } from '@/app/pages/AdminPanel';
 

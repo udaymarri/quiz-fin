@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { QuizResult } from '@/app/components/QuizInterface';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { useAuth } from '@/context/AuthContext';
-import { saveQuizResult } from '@/services/firebase';
+// Removed redundant Firebase import
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
@@ -24,32 +24,7 @@ export function QuizResults({ result, onRetakeQuiz, onGoHome }: QuizResultsProps
   const scorePercentage = (result.correctAnswers / result.totalQuestions) * 100;
   const averageTime = result.totalTime / result.totalQuestions;
 
-  useEffect(() => {
-    const saveResult = async () => {
-      if (!user) return;
-      
-      setIsSaving(true);
-      try {
-        await saveQuizResult({
-          userId: user.uid,
-          username: user.displayName || user.email?.split('@')[0] || 'Anonymous',
-          score: score,
-          correctAnswers: result.correctAnswers,
-          totalQuestions: result.totalQuestions,
-          timeTaken: result.totalTime,
-          category: result.category,
-          difficulty: result.difficulty
-        });
-      } catch (err: any) {
-        console.error("Error saving result:", err);
-        setSaveError("Failed to save result to leaderboard.");
-      } finally {
-        setIsSaving(false);
-      }
-    };
-
-    saveResult();
-  }, [user, result, score]);
+  // Result saving is now handled by the parent App component via the centralized API service
 
   // Prepare data for time spent chart
   const timeChartData = result.results.map((r, index) => ({

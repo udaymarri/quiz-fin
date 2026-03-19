@@ -11,12 +11,15 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/app/components/ui/card';
 
+import { useAuth } from '../../context/AuthContext';
+
 interface AuthOverlayProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export function AuthOverlay({ isOpen, onClose }: AuthOverlayProps) {
+  const { refreshUser } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,10 +37,14 @@ export function AuthOverlay({ isOpen, onClose }: AuthOverlayProps) {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        // Wait for profile update to complete
         await updateProfile(userCredential.user, { displayName: username });
+        // Manually refresh user in context to ensure displayName is available
+        refreshUser();
       }
       onClose();
     } catch (err: any) {
+      console.error("Auth error:", err);
       setError(err.message || 'An error occurred during authentication');
     } finally {
       setIsLoading(false);

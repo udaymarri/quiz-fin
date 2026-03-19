@@ -1,10 +1,7 @@
-const IS_PROD = import.meta.env.PROD || window.location.hostname !== 'localhost';
-const BACKEND_URL = 'https://quiz-fin-production.up.railway.app';
-
 // @ts-ignore
-const API_BASE_URL = import.meta.env.VITE_API_URL || (IS_PROD ? BACKEND_URL : 'http://localhost:8000');
+const API_BASE_URL = import.meta.env.VITE_API_URL || (IS_PROD ? 'https://quiz-fin-production.up.railway.app' : 'http://localhost:8000');
 // @ts-ignore
-export const WS_BASE_URL = import.meta.env.VITE_WS_URL || (IS_PROD ? BACKEND_URL.replace('https://', 'wss://') : 'ws://localhost:8000');
+export const WS_BASE_URL = import.meta.env.VITE_WS_URL || (API_BASE_URL.replace('http', 'ws'));
 
 export interface Question {
   id?: string;
