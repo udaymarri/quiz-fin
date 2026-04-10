@@ -50,7 +50,7 @@ app.add_middleware(
 def init_firebase():
         if firebase_admin._apps:
                     return firestore.client()
-                service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+ s    ervice_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
     if service_account_json:
                 try:
                                 logger.info("Initializing Firebase with FIREBASE_SERVICE_ACCOUNT_JSON")
